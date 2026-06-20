@@ -2,12 +2,13 @@
 
 import React from "react";
 
-export default function HomeView() {
+export default function HomeView( setActiveTab ) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-12 px-4 animate-fadeIn">
       
       {/* 1. Top Decorative Phone Icon Card */}
       <div className="relative w-36 h-36 bg-gradient-to-b from-white to-slate-50 rounded-3xl border border-slate-100 shadow-[0_12px_24px_rgba(0,0,0,0.03)] flex items-center justify-center mb-8">
+        
         {/* Main Blue Phone Icon */}
         <svg
           className="w-16 h-16 text-[#2563eb]"
@@ -23,12 +24,16 @@ export default function HomeView() {
           />
         </svg>
 
-        {/* Top-Right Decorative sparkles star */}
-        <div className="absolute -top-1.5 -right-1.5 text-amber-500">
-          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+        {/* Big Yellow Star with Smooth Infinite Bouncing Effect */}
+        <div className="absolute -top-4 -right-4 text-amber-400 animate-[bounce_2s_infinite]">
+          <svg 
+            className="w-11 h-11 fill-current filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)]" 
+            viewBox="0 0 24 24"
+          >
             <path d="M9.812 14.906L12 21.75l2.188-6.844L21 12.75l-6.812-2.156L12 3.75 9.812 10.594 3 12.75l6.812 2.156z" />
           </svg>
         </div>
+
       </div>
 
       {/* 2. Main Bold Headline */}

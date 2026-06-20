@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import HomeView from "../components/HomeView";
+import ActiveNumbersView from "../components/ActiveNumbersView";
+import HistoryView from "../components/HistoryView";
 
 // Inline Custom SVGs (No NPM installations required)
 const HomeIcon = (props) => (
@@ -25,7 +27,7 @@ export default function Dashboard() {
       
       {/* 1. DESKTOP HEADER */}
       <div className="hidden md:block w-full bg-white border-b border-[#e2e8f0] shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px- sm:px-6 lg:px-8">
           <div className="flex h-[72px] items-center justify-start gap-4">
             
             <button
@@ -58,16 +60,7 @@ export default function Dashboard() {
               <span>History</span>
             </button>
 
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-all duration-200 ${
-                activeTab === "profile" ? "bg-[#edf4ff] text-[#1a56db] border border-[#cbdffb]" : "text-[#475569] hover:bg-[#f1f5f9] border border-transparent"
-              }`}
-            >
-              <ProfileIcon className="w-[18px] h-[18px]" />
-              <span>Profile</span>
-            </button>
-
+            
           </div>
         </div>
       </div>
@@ -98,18 +91,14 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         
         {/* Active View Switching */}
-        {activeTab === "home" && <HomeView />}
+        {activeTab === "home" && <HomeView setActiveTab={setActiveTab} />}
         
-        {activeTab === "active" && (
-          <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-8 text-center text-[#64748b]">
-            <h1 className="text-xl font-bold text-[#1e293b]">Active Numbers Content</h1>
-          </div>
-        )}
-        {activeTab === "history" && (
-          <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-8 text-center text-[#64748b]">
-            <h1 className="text-xl font-bold text-[#1e293b]">History Log Content</h1>
-          </div>
-        )}
+        {/* Prop bilkul properly passed hai takay error na aye */}
+        {activeTab === "active" && <ActiveNumbersView onBackToHome={() => setActiveTab("home")} />}
+
+        {/* History view link kar diya hai */}
+        {activeTab === "history" && <HistoryView />}
+        
         {activeTab === "profile" && (
           <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-8 text-center text-[#64748b]">
             <h1 className="text-xl font-bold text-[#1e293b]">Profile View Content</h1>
