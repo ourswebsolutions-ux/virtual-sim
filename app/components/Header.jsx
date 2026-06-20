@@ -49,20 +49,7 @@ export default function Header() {
             </div>
 
             {/* Desktop Links */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                Check Out
-              </a>
-              <a href="/about" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                About
-              </a>
-              {isLoggedIn && (
-                <a href="/dashboard" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                  Dashboard
-                </a>
-              )}
-            </div>
-
+           
             {/* Desktop Buttons */}
             <div className="hidden md:flex items-center space-x-4">
               {!isLoggedIn ? (

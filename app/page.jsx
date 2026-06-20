@@ -1,24 +1,16 @@
 'use client'
-import React from 'react';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import CheckoutForm from './components/CheckoutForm';
-import TrustIndicators from './components/TrustIndicators';
+import React, { useState, useMemo } from 'react';
+import { Search, X, Calendar, ChevronDown, LogOut, ExternalLink, Check, Clock, AlertCircle, Download } from 'lucide-react';
+// import About from '../components/About';
+// import FAQ from '../components/FAQ';
 import About from './components/About';
 import FAQ from './components/FAQ';
-import Footer from './components/Footer';
+export default function Dashboard() {
 
-function App() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
-      <main>
-        <Hero />
-        <CheckoutForm />
-        <TrustIndicators />
-        
-      </main>
-    </div>
-  );
+    return (
+        <>
+            <About />
+            <FAQ />
+        </>
+    );
 }
-
-export default App;
