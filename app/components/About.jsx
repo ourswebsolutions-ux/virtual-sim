@@ -51,7 +51,7 @@ export default function About() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-[#2563EB] mb-4">
-            How VNumHub works
+            How  VNumHub works
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Get instant virtual SIM numbers for OTP verification and global SMS receiving in four simple steps
@@ -85,10 +85,10 @@ export default function About() {
         <div className="mt-16 bg-white rounded-2xl border border-slate-200/60 p-8 sm:p-12">
           <div className="max-w-3xl mx-auto text-center">
             <h3 className="text-2xl font-bold text-[#2563EB] mb-4" href="https://wa.me/923217906064">
-              Why choose VNumHub?
+              Why choose  VNumHub?
             </h3>
             <p className="text-slate-600 leading-relaxed mb-8">
-              Traditional SIM cards and phone verification systems are slow and limited. VNumHub provides instant virtual numbers for SMS, OTP verification, and online registrations. No physical SIM required, no waiting time—just instant access from anywhere in the world with full privacy and security.
+              Traditional SIM cards and phone verification systems are slow and limited.  VNumHub provides instant virtual numbers for SMS, OTP verification, and online registrations. No physical SIM required, no waiting time—just instant access from anywhere in the world with full privacy and security.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

@@ -45,7 +45,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-slate-600">
-            Everything you need to know about VNumHub virtual SIM services
+            Everything you need to know about  VNumHub virtual SIM services
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export default function FAQ() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left sm:text-center">
               <div>
                 <p className="text-sl text-sm mb-1">Email</p>
-                <p className="text-white font-medium">support@vnumhub.com</p>
+                <p className="text-white font-medium">support@ VNumHub.com</p>
               </div>
                               <div>
                 <p className="text-slat400 text-sm mb-1">Service</p>

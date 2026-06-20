@@ -153,7 +153,7 @@ export default function Footer() {
           {/* Disclaimer */}
           <div className="mt-8 pt-6 border-t border-slate-800">
             <p className="text-xs text-slate-900 text-center max-w-4xl mx-auto leading-relaxed">
-              AWPay is a licensed money transmission service. Your funds are protected by bank-level security and regulatory oversight. 
+              VNumHub is a licensed money transmission service. Your funds are protected by bank-level security and regulatory oversight. 
               Exchange rates are subject to market fluctuation. See our Terms of Service for complete details.
             </p>
           </div>
