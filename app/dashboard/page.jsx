@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
+import  { useRouter,router } from "next/navigation";
 import HomeView from "../components/HomeView";
 import ActiveNumbersView from "../components/ActiveNumbersView";
 import HistoryView from "../components/HistoryView";
-
+import MobileDock from "../components/MobileDock";
 // Inline Custom SVGs (No NPM installations required)
 const HomeIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.2" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
@@ -20,8 +21,14 @@ const ProfileIcon = (props) => (
 );
 
 export default function Dashboard() {
+  
   const [activeTab, setActiveTab] = useState("home");
-
+useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location="/";
+    }
+  }, [router]);
   return (
     <div className="min-h-screen bg-[#f8fafc] w-full pb-28 md:pb-0">
       
@@ -66,26 +73,7 @@ export default function Dashboard() {
       </div>
 
       {/* 2. MOBILE DOCK */}
-      <div className="md:hidden fixed bottom-6 left-4 right-4 z-50">
-        <div className="bg-[#f1f5f9]/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_10px_25px_rgba(0,0,0,0.08)] h-16 px-2 relative">
-          
-          <div className="grid grid-cols-5 h-full items-center justify-items-center">
-            <button onClick={() => setActiveTab("home")} className={`flex items-center justify-center w-full h-full ${activeTab === "home" ? "text-[#1a56db]" : "text-[#475569]"}`}><HomeIcon className="w-6 h-6" /></button>
-            <button onClick={() => setActiveTab("active")} className={`flex items-center justify-center w-full h-full ${activeTab === "active" ? "text-[#1a56db]" : "text-[#475569]"}`}><PhoneIcon className="w-6 h-6" /></button>
-            
-            <div className="w-full"></div>
-            
-            <button onClick={() => setActiveTab("history")} className={`flex items-center justify-center w-full h-full ${activeTab === "history" ? "text-[#1a56db]" : "text-[#475569]"}`}><HistoryIcon className="w-6 h-6" /></button>
-            <button onClick={() => setActiveTab("profile")} className={`flex items-center justify-center w-full h-full ${activeTab === "profile" ? "text-[#1a56db]" : "text-[#475569]"}`}><ProfileIcon className="w-6 h-6" /></button>
-          </div>
-
-          {/* Half-in / Half-out Large Transparent Floating Logo */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 flex items-center justify-center w-36 h-36 pointer-events-none">
-            <img src="./logo.png" alt="Brand Logo" className="w-full h-full object-contain filter drop-shadow-[0_10px_16px_rgba(0,0,0,0.2)]" />
-          </div>
-
-        </div>
-      </div>
+     <MobileDock activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">

@@ -61,7 +61,7 @@ const [forgotLoading, setForgotLoading] = useState(false);
     onClose();
 
     // reload UI
-    window.location.reload();
+    window.location="/dashboard";
 
   } catch (err) {
         ShowSuccess("Login successful!");
