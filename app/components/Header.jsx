@@ -102,7 +102,7 @@ export default function Header() {
           <div className="flex justify-between items-center h-24">
             <div className="flex-shrink-0">
               <a href="/" className="flex items-center">
-                <div className="w-40 h-28 flex items-start justify-center">
+                <div className="w-48 h-36 flex items-start justify-center">
                   <img src="./logo.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
               </a>

@@ -82,7 +82,7 @@ useEffect(() => {
         {activeTab === "home" && <HomeView setActiveTab={setActiveTab} />}
         
         {/* Prop bilkul properly passed hai takay error na aye */}
-        {activeTab === "active" && <ActiveNumbersView onBackToHome={() => setActiveTab("home")} />}
+        {activeTab === "active" && <ActiveNumbersView onBackToHome={() => setActiveTab("home")} setActiveTab={setActiveTab} />}
 
         {/* History view link kar diya hai */}
         {activeTab === "history" && <HistoryView />}

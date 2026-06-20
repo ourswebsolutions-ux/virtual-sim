@@ -12,8 +12,8 @@ export default function SignIn({ onClose, onSwitchToSignUp }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
-const [forgotEmail, setForgotEmail] = useState('');
-const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -23,93 +23,93 @@ const [forgotLoading, setForgotLoading] = useState(false);
     }));
   };
 
-    const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  try {
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-      }),
-    });
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setError(data.message || 'Login failed');
-            ShowError(data.message || "Login failed");
+      if (!res.ok) {
+        setError(data.message || 'Login failed');
+        ShowError(data.message || "Login failed");
 
+        return;
+      }
+
+      // ✅ save user
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // (optional) fake token if you are not using JWT yet
+      ShowSuccess("Login successful!");
+
+      localStorage.setItem('token', 'logged-in');
+
+      // close modal
+      onClose();
+
+      // reload UI
+      window.location = "/dashboard";
+
+    } catch (err) {
+      ShowSuccess("Login successful!");
+
+      console.error(err);
+      setError('Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      ShowError("Please enter your email first");
       return;
     }
 
-    // ✅ save user
-    localStorage.setItem('user', JSON.stringify(data.user));
+    try {
+      const res = await fetch("/api/forgot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+        }),
+      });
 
-    // (optional) fake token if you are not using JWT yet
-    ShowSuccess("Login successful!");
+      const data = await res.json();
 
-    localStorage.setItem('token', 'logged-in');
+      if (!res.ok) {
+        ShowError(data.message || "Failed to send email");
+        return;
+      }
 
-    // close modal
-    onClose();
-
-    // reload UI
-    window.location="/dashboard";
-
-  } catch (err) {
-        ShowSuccess("Login successful!");
-
-    console.error(err);
-    setError('Something went wrong');
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleForgotPassword = async () => {
-  if (!formData.email) {
-    ShowError("Please enter your email first");
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/forgot", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.email,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      ShowError(data.message || "Failed to send email");
-      return;
+      ShowSuccess("Password sending in your email");
+    } catch (err) {
+      ShowError("Server error");
     }
-
-    ShowSuccess("Password sending in your email");
-  } catch (err) {
-    ShowError("Server error");
-  }
-};
+  };
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-[#06B6D4]/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all">
@@ -155,11 +155,10 @@ const handleForgotPassword = async () => {
                   onFocus={() => setFocused('email')}
                   onBlur={() => setFocused(null)}
                   placeholder="you@example.com"
-                  className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 rounded-xl transition-all duration-200 placeholder:text-slate-300 focus:outline-none ${
-                    focused === 'email' 
-                      ? 'border-slate-900 bg-white shadow-lg shadow-slate-900/5' 
+                  className={`w-full pl-12 pr-4 py-3.5 bg-white border-2 rounded-xl text-black transition-all duration-200 placeholder:text-slate-900 focus:outline-none ${focused === 'email'
+                      ? 'border-slate-900 bg-white shadow-lg shadow-slate-900/5'
                       : 'border-slate-200 hover:border-slate-300'
-                  }`}
+                    }`}
                   required
                 />
               </div>
@@ -172,12 +171,12 @@ const handleForgotPassword = async () => {
                   Password
                 </label>
                 <button
-  type="button"
-  onClick={handleForgotPassword}
-  className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
->
-  Forgot?
-</button>
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm font-medium  text-black hover:text-black transition-colors"
+                >
+                  Forgot?
+                </button>
               </div>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -193,11 +192,10 @@ const handleForgotPassword = async () => {
                   onFocus={() => setFocused('password')}
                   onBlur={() => setFocused(null)}
                   placeholder="Enter your password"
-                  className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 rounded-xl transition-all duration-200 placeholder:text-slate-300 focus:outline-none ${
-                    focused === 'password' 
-                      ? 'border-slate-900 bg-white shadow-lg shadow-slate-900/5' 
+                  className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 rounded-xl text-black transition-all duration-200 placeholder:text-slate-300 focus:outline-none ${focused === 'password'
+                      ? 'border-slate-900 bg-white shadow-lg shadow-slate-900/5'
                       : 'border-slate-200 hover:border-slate-300'
-                  }`}
+                    }`}
                   required
                 />
                 <button
@@ -220,7 +218,7 @@ const handleForgotPassword = async () => {
             </div>
 
             {/* Remember me */}
-          
+
             {/* Submit button */}
             <button
               type="submit"
@@ -230,10 +228,10 @@ const handleForgotPassword = async () => {
             </button>
 
             {/* Divider */}
-            
+
             {/* Social login */}
             <div className="grid grid-cols-2 gap-3">
-              
+
             </div>
           </form>
 

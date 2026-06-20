@@ -162,7 +162,7 @@ const handleSubmit = async (e) => {
                   onFocus={() => setFocused('email')}
                   onBlur={() => setFocused(null)}
                   placeholder="you@example.com"
-                  className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 rounded-xl transition-all duration-200 placeholder:text-slate-300 focus:outline-none ${
+                  className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 rounded-xl text-black transition-all duration-200 placeholder:text-slate-300 focus:outline-none ${
                     focused === 'email' 
                       ? 'border-slate-900 bg-white shadow-lg shadow-slate-900/5' 
                       : 'border-slate-200 hover:border-slate-300'
@@ -191,7 +191,7 @@ const handleSubmit = async (e) => {
                   onFocus={() => setFocused('password')}
                   onBlur={() => setFocused(null)}
                   placeholder="Create a strong password"
-                  className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 rounded-xl transition-all duration-200 placeholder:text-slate-300 focus:outline-none ${
+                  className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border-2 text-black rounded-xl transition-all duration-200 placeholder:text-slate-300 focus:outline-none ${
                     focused === 'password' 
                       ? 'border-slate-900 bg-white shadow-lg shadow-slate-900/5' 
                       : 'border-slate-200 hover:border-slate-300'
