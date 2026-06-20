@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 'use client'
 
 import React, { useState, useMemo } from 'react';
@@ -379,3 +381,4 @@ export default function Dashboard() {
     </div>
   );
 }
+>>>>>>> 902f7a1c5f0aeac328506f8d14eeded5574baf18
