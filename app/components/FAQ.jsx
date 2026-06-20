@@ -109,15 +109,15 @@ export default function FAQ() {
           <div className="mt-8 pt-8 border-t border-[#2563EB]">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left sm:text-center">
               <div>
-                <p className="text-slate-400 text-sm mb-1">Email</p>
+                <p className="text-sl text-sm mb-1">Email</p>
                 <p className="text-white font-medium">support@vnumhub.com</p>
               </div>
                               <div>
-                <p className="text-slate-400 text-sm mb-1">Service</p>
+                <p className="text-slat400 text-sm mb-1">Service</p>
                 <p className="text-white font-medium">Virtual SIM & OTP</p>
               </div>
               <div>
-                <p className="text-slate-400 text-sm mb-1">Availability</p>
+                <p className="text-slae-400 text-sm mb-1">Availability</p>
                 <p className="text-white font-medium">24/7 Support</p>
               </div>
             </div>
