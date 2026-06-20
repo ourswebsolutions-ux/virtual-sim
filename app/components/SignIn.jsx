@@ -20,44 +20,54 @@ export default function SignIn({ onClose, onSwitchToSignUp }) {
   };
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      const res = await login({ 
-        email: formData.email, 
-        password: formData.password 
-      });
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+      }),
+    });
 
-      if (res.token) {
-        // Save token in localStorage
-        localStorage.setItem('token', res.token);
+    const data = await res.json();
 
-        // Optionally save email/user info
-        localStorage.setItem('user', JSON.stringify(res.user || {}));
-
-        // Close modal
-        onClose();
-
-        // Optionally reload page or update auth context/state
-        window.location.reload();
-      } else {
-        setError(res.message || 'Login failed');
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      setError(data.message || 'Login failed');
+      return;
     }
-  };
+
+    // ✅ save user
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    // (optional) fake token if you are not using JWT yet
+    localStorage.setItem('token', 'logged-in');
+
+    // close modal
+    onClose();
+
+    // reload UI
+    window.location.reload();
+
+  } catch (err) {
+    console.error(err);
+    setError('Something went wrong');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-[#06B6D4]/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       
@@ -171,7 +181,7 @@ export default function SignIn({ onClose, onSwitchToSignUp }) {
             {/* Submit button */}
             <button
               type="submit"
-              className="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full py-3.5 px-6 bg-[#06B6D4] hover:bg-slate-800 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98]"
             >
               Sign in
             </button>

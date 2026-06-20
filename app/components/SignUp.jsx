@@ -32,29 +32,38 @@ export default function SignUp({ onClose, onSwitchToSignIn,setShowSignIn }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
-  
-
   try {
-    const payload = {
-      name: formData.fullName,
-      email: formData.email,
-      password: formData.password
-    };
+    const res = await fetch('/api/singup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+      }),
+    });
 
-    const response = await register(payload);
-    alert(response.message || "Account created successfully!");
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Signup failed');
+    }
+
+    alert(data.message || "Account created successfully!");
+
     onClose(); // close modal after successful signup
-    setShowSignIn(true)
+    setShowSignIn(true);
 
   } catch (err) {
     console.error(err);
-    alert(err.response?.data?.error || "Failed to create account");
+    alert(err.message || "Failed to create account");
   }
 };
-
   const getStrengthColor = () => {
     if (passwordStrength === 0) return 'bg-slate-200';
     if (passwordStrength === 1) return 'bg-red-500';
@@ -75,7 +84,7 @@ export default function SignUp({ onClose, onSwitchToSignIn,setShowSignIn }) {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-[#06B6D4]/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       
@@ -245,7 +254,7 @@ export default function SignUp({ onClose, onSwitchToSignIn,setShowSignIn }) {
             {/* Submit button */}
             <button
               type="submit"
-              className="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full py-3.5 px-6 bg-[#06B6D4] hover:bg-slate-800 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98]"
             >
               Create account
             </button>

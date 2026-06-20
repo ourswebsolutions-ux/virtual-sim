@@ -42,7 +42,7 @@ export default function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={scrollToCheckout}
-            className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-slate-900/20 hover:scale-105"
+            className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-[#06B6D4] hover:bg-slate-800 rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-slate-900/20 hover:scale-105"
           >
             Proceed to Checkout
           </button>

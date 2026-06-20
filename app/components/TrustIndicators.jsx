@@ -58,7 +58,7 @@ export default function TrustIndicators() {
               key={index}
               className="flex flex-col items-center text-center p-6 rounded-xl bg-slate-50 border border-slate-200/60 hover:border-slate-300 hover:shadow-lg transition-all duration-200"
             >
-              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white mb-4">
+              <div className="w-12 h-12 bg-[#06B6D4] rounded-xl flex items-center justify-center text-white mb-4">
                 {indicator.icon}
               </div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">
