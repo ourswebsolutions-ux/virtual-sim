@@ -50,7 +50,7 @@ export default function About() {
     <section id="about" className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 to-blue-50/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#2563EB] mb-4">
             How VNumHub works
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
@@ -64,7 +64,7 @@ export default function About() {
               key={index}
               className="relative bg-white p-8 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300"
             >
-              <div className="absolute -top-4 -left-4 w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-[#06B6D4] text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
                 {step.number}
               </div>
 
@@ -72,7 +72,7 @@ export default function About() {
                 {step.icon}
               </div>
 
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">
+              <h3 className="text-xl font-semibold text-[#2563EB] mb-3">
                 {step.title}
               </h3>
               <p className="text-slate-600 leading-relaxed">
@@ -84,7 +84,7 @@ export default function About() {
 
         <div className="mt-16 bg-white rounded-2xl border border-slate-200/60 p-8 sm:p-12">
           <div className="max-w-3xl mx-auto text-center">
-            <h3 className="text-2xl font-bold text-slate-900 mb-4">
+            <h3 className="text-2xl font-bold text-[#2563EB] mb-4">
               Why choose VNumHub?
             </h3>
             <p className="text-slate-600 leading-relaxed mb-8">
@@ -93,7 +93,7 @@ export default function About() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="#checkout"
-                className="px-6 py-3 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors"
+                className="px-6 py-3 bg-[#06B6D4] text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors"
               >
                 Get Number Now
               </a>

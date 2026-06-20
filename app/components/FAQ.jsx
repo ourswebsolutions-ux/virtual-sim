@@ -41,7 +41,7 @@ export default function FAQ() {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#06B6D4] mb-4">
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-slate-600">
@@ -54,7 +54,7 @@ export default function FAQ() {
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-slate-50 border border-slate-200/60 rounded-xl overflow-hidden transition-all duration-200 hover:border-slate-300"
+              className="bg-slate-50 border border-slate-200/60 rounded-xl overflow-hidden transition-all duration-200 hover:border-[#2563EB]"
             >
               <button
                 onClick={() => toggleFAQ(index)}
@@ -88,11 +88,11 @@ export default function FAQ() {
         </div>
 
         {/* Contact Section */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 sm:p-12 text-center">
+        <div className="bg-[#06B6D4] rounded-2xl p-8 sm:p-12 text-center">
           <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
             Still need help?
           </h3>
-          <p className="text-slate-300 mb-8 max-w-2xl mx-auto">
+          <p className=" mb-8 max-w-2xl mx-auto">
             Our support team is available 24/7 to help you with virtual SIM activation, OTP issues, or account questions.
           </p>
 
@@ -106,7 +106,7 @@ export default function FAQ() {
 </a>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-slate-700">
+          <div className="mt-8 pt-8 border-t border-[#2563EB]">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left sm:text-center">
               <div>
                 <p className="text-slate-400 text-sm mb-1">Email</p>
