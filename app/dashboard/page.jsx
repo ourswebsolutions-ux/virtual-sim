@@ -1,388 +1,122 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { Search, X, Calendar, ChevronDown, Check, Clock, AlertCircle, Download } from "lucide-react";
 
-// ------------------------
-// Mock data generator
-// ------------------------
-const generateTransactions = () => {
-    const statuses = ["completed", "pending", "failed"];
-    const currencies = ["PKR", "INR", "BDT", "PHP"];
+import React, { useState } from "react";
+import HomeView from "../components/HomeView";
 
-    return Array.from({ length: 24 }, (_, i) => {
-        const usdAmount = Math.floor(Math.random() * 900) + 100;
-        const currency = currencies[Math.floor(Math.random() * currencies.length)];
-        const exchangeRate =
-            currency === "PKR"
-                ? 278
-                : currency === "INR"
-                    ? 83
-                    : currency === "BDT"
-                        ? 110
-                        : 56;
-        const localAmount = (usdAmount * exchangeRate).toFixed(2);
-
-        return {
-            id: `TXN${String(1000 + i).padStart(6, "0")}`,
-            date: new Date(2026, 0, Math.floor(Math.random() * 28) + 1).toISOString(),
-            sentAmount: usdAmount,
-            receivedAmount: localAmount,
-            currency,
-            status: statuses[Math.floor(Math.random() * statuses.length)],
-            recipient: `recipient_${i}@example.com`,
-            fee: (usdAmount * 0.015).toFixed(2),
-            exchangeRate,
-        };
-    }).sort((a, b) => new Date(b.date) - new Date(a.date));
-};
-
-// ------------------------
-// Status Badge Component
-// ------------------------
-const StatusBadge = ({ status }) => {
-    const styles = {
-        completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        pending: "bg-amber-50 text-amber-700 border-amber-200",
-        failed: "bg-red-50 text-red-700 border-red-200",
-    };
-
-    const icons = {
-        completed: <Check className="w-3 h-3" />,
-        pending: <Clock className="w-3 h-3" />,
-        failed: <AlertCircle className="w-3 h-3" />,
-    };
-
-    return (
-        <span
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${styles[status]}`}
-        >
-            {icons[status]}
-            <span className="capitalize">{status}</span>
-        </span>
-    );
-};
-
-// ------------------------
-// Stat Card Component
-// ------------------------
-const StatCard = ({ label, value, subValue }) => (
-    <div className="bg-white border border-gray-200 rounded-lg p-5">
-        <div className="text-sm font-medium text-gray-600 mb-1">{label}</div>
-        <div className="text-2xl font-semibold text-gray-900 mb-1">{value}</div>
-        {subValue && <div className="text-sm text-gray-500">{subValue}</div>}
-    </div>
+// Inline Custom SVGs (No NPM installations required)
+const HomeIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.2" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+);
+const PhoneIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.2" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.557-5.144-3.874-6.703-6.7l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+);
+const HistoryIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.2" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+);
+const ProfileIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.2" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
 );
 
-// ------------------------
-// Transaction Modal Component
-// ------------------------
-const TransactionModal = ({ transaction, onClose }) => {
-    if (!transaction) return null;
-
-    return (
-        <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-            onClick={onClose}
-        >
-            <div
-                className="bg-white rounded-lg max-w-lg w-full shadow-xl"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-900">Transaction Details</h2>
-                        <p className="text-sm text-gray-500 mt-0.5">{transaction.id}</p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                {/* Body */}
-                <div className="px-6 py-5 space-y-4">
-                    {/* Status */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                        <span className="text-sm font-medium text-gray-600">Status</span>
-                        <StatusBadge status={transaction.status} />
-                    </div>
-
-                    {/* Amount Details */}
-                    <div className="space-y-3">
-                        <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Amount Sent</span>
-                            <span className="text-sm font-medium text-gray-900">
-                                ${transaction.sentAmount.toFixed(2)} USD
-                            </span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Exchange Rate</span>
-                            <span className="text-sm font-medium text-gray-900">
-                                1 USD = {transaction.exchangeRate} {transaction.currency}
-                            </span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Transaction Fee</span>
-                            <span className="text-sm font-medium text-gray-900">${transaction.fee} USD</span>
-                        </div>
-                        <div className="flex justify-between pt-3 border-t border-gray-200">
-                            <span className="text-sm font-semibold text-gray-900">Amount Received</span>
-                            <span className="text-sm font-semibold text-gray-900">
-                                {transaction.receivedAmount} {transaction.currency}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Transaction Info */}
-                    <div className="pt-4 border-t border-gray-100 space-y-3">
-                        <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Date</span>
-                            <span className="text-sm font-medium text-gray-900">
-                                {new Date(transaction.date).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
-                            </span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Recipient</span>
-                            <span className="text-sm font-medium text-gray-900">{transaction.recipient}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex gap-3">
-                    <button className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                        <Download className="w-4 h-4 inline mr-2" />
-                        Download Receipt
-                    </button>
-                    <button
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
-                    >
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// ------------------------
-// Empty State Component
-// ------------------------
-const EmptyState = () => (
-    <div className="text-center py-16 px-4">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-8 h-8 text-gray-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No transactions yet</h3>
-        <p className="text-gray-600 mb-6 max-w-sm mx-auto">
-            Start sending money internationally to see your transaction history here.
-        </p>
-        <button className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors">
-            Make Your First Payment
-        </button>
-    </div>
-);
-
-// ------------------------
-// Dashboard Component
-// ------------------------
 export default function Dashboard() {
-    const [transactions, setTransactions] = useState([]);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [activeTab, setActiveTab] = useState("home");
 
-    // Generate transactions only on client
-    useEffect(() => {
-        const data = generateTransactions();
-        setTransactions(data);
-    }, []);
+  return (
+    <div className="min-h-screen bg-[#f8fafc] w-full pb-28 md:pb-0">
+      
+      {/* 1. DESKTOP HEADER */}
+      <div className="hidden md:block w-full bg-white border-b border-[#e2e8f0] shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-[72px] items-center justify-start gap-4">
+            
+            <button
+              onClick={() => setActiveTab("home")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-all duration-200 ${
+                activeTab === "home" ? "bg-[#edf4ff] text-[#1a56db] border border-[#cbdffb]" : "text-[#475569] hover:bg-[#f1f5f9] border border-transparent"
+              }`}
+            >
+              <HomeIcon className="w-[18px] h-[18px]" />
+              <span>Home</span>
+            </button>
 
-    // Filter transactions
-    const filteredTransactions = useMemo(() => {
-        return transactions.filter((txn) => {
-            const matchesSearch =
-                txn.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                txn.recipient.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStatus = statusFilter === "all" || txn.status === statusFilter;
-            return matchesSearch && matchesStatus;
-        });
-    }, [transactions, searchTerm, statusFilter]);
+            <button
+              onClick={() => setActiveTab("active")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-all duration-200 ${
+                activeTab === "active" ? "bg-[#edf4ff] text-[#1a56db] border border-[#cbdffb]" : "text-[#475569] hover:bg-[#f1f5f9] border border-transparent"
+              }`}
+            >
+              <PhoneIcon className="w-[18px] h-[18px]" />
+              <span>Active Numbers</span>
+            </button>
 
-    // Stats
-    const stats = useMemo(() => {
-        const completed = transactions.filter((t) => t.status === "completed");
-        return {
-            totalTransactions: transactions.length,
-            totalSent: completed.reduce((sum, t) => sum + t.sentAmount, 0).toFixed(2),
-            completedCount: completed.length,
-        };
-    }, [transactions]);
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-all duration-200 ${
+                activeTab === "history" ? "bg-[#edf4ff] text-[#1a56db] border border-[#cbdffb]" : "text-[#475569] hover:bg-[#f1f5f9] border border-transparent"
+              }`}
+            >
+              <HistoryIcon className="w-[18px] h-[18px]" />
+              <span>History</span>
+            </button>
 
-    if (transactions.length === 0) return <div className="p-8 text-center">Loading...</div>;
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-all duration-200 ${
+                activeTab === "profile" ? "bg-[#edf4ff] text-[#1a56db] border border-[#cbdffb]" : "text-[#475569] hover:bg-[#f1f5f9] border border-transparent"
+              }`}
+            >
+              <ProfileIcon className="w-[18px] h-[18px]" />
+              <span>Profile</span>
+            </button>
 
-    return (
-        <div className="min-h-screen bg-gray-50">
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    <StatCard
-                        label="Total Transactions"
-                        value={stats.totalTransactions}
-                        subValue={`${stats.completedCount} completed`}
-                    />
-                    <StatCard label="Total Sent" value={`$${stats.totalSent}`} subValue="USD" />
-                    <StatCard
-                        label="Success Rate"
-                        value={`${Math.round((stats.completedCount / stats.totalTransactions) * 100)}%`}
-                        subValue="Last 30 days"
-                    />
-                </div>
-
-                {/* Search & Filter */}
-                <div className="bg-white border border-gray-200 rounded-lg mb-6 p-4 flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700" />
-                        <input
-                            type="text"
-                            placeholder="Search by transaction ID or recipient..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                        />
-                    </div>
-                    <div className="relative">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="appearance-none pl-4 pr-10 py-2 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white cursor-pointer"
-                        >
-                            <option value="all">All Statuses</option>
-                            <option value="completed">Completed</option>
-                            <option value="pending">Pending</option>
-                            <option value="failed">Failed</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-                </div>
-
-
-                {/* Transaction Table / Cards */}
-                {filteredTransactions.length === 0 ? (
-                    <EmptyState />
-                ) : (
-                    <div className="space-y-4">
-                        {/* Desktop Table */}
-                        <div className="hidden lg:block bg-white border border-gray-200 rounded-lg overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200">
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                            Date
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                            Transaction ID
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                            Sent (USD)
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                            Received
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {filteredTransactions.map((txn) => (
-                                        <tr
-                                            key={txn.id}
-                                            onClick={() => setSelectedTransaction(txn)}
-                                            className="hover:bg-gray-50 cursor-pointer transition-colors"
-                                        >
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {new Date(txn.date).toLocaleDateString("en-US", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">{txn.id}</div>
-                                                <div className="text-xs text-gray-500">{txn.recipient}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">
-                                                ${txn.sentAmount.toFixed(2)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                                                <div className="font-medium text-gray-900">{txn.receivedAmount}</div>
-                                                <div className="text-xs text-gray-500">{txn.currency}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <StatusBadge status={txn.status} />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Mobile Cards */}
-                        <div className="lg:hidden space-y-3">
-                            {filteredTransactions.map((txn) => (
-                                <div
-                                    key={txn.id}
-                                    onClick={() => setSelectedTransaction(txn)}
-                                    className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-gray-300 transition-colors"
-                                >
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div>
-                                            <div className="text-sm font-medium text-gray-900 mb-1">{txn.id}</div>
-                                            <div className="text-xs text-gray-500">{txn.recipient}</div>
-                                        </div>
-                                        <StatusBadge status={txn.status} />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
-                                        <div>
-                                            <div className="text-xs text-gray-600 mb-1">Sent</div>
-                                            <div className="text-sm font-medium text-gray-900">${txn.sentAmount.toFixed(2)} USD</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-600 mb-1">Received</div>
-                                            <div className="text-sm font-medium text-gray-900">{txn.receivedAmount} {txn.currency}</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-3">
-                                        {new Date(txn.date).toLocaleDateString("en-US", {
-                                            month: "short",
-                                            day: "numeric",
-                                            year: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </main>
-
-            {/* Transaction Modal */}
-            {selectedTransaction && (
-                <TransactionModal transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} />
-            )}
+          </div>
         </div>
-    );
+      </div>
+
+      {/* 2. MOBILE DOCK */}
+      <div className="md:hidden fixed bottom-6 left-4 right-4 z-50">
+        <div className="bg-[#f1f5f9]/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_10px_25px_rgba(0,0,0,0.08)] h-16 px-2 relative">
+          
+          <div className="grid grid-cols-5 h-full items-center justify-items-center">
+            <button onClick={() => setActiveTab("home")} className={`flex items-center justify-center w-full h-full ${activeTab === "home" ? "text-[#1a56db]" : "text-[#475569]"}`}><HomeIcon className="w-6 h-6" /></button>
+            <button onClick={() => setActiveTab("active")} className={`flex items-center justify-center w-full h-full ${activeTab === "active" ? "text-[#1a56db]" : "text-[#475569]"}`}><PhoneIcon className="w-6 h-6" /></button>
+            
+            <div className="w-full"></div>
+            
+            <button onClick={() => setActiveTab("history")} className={`flex items-center justify-center w-full h-full ${activeTab === "history" ? "text-[#1a56db]" : "text-[#475569]"}`}><HistoryIcon className="w-6 h-6" /></button>
+            <button onClick={() => setActiveTab("profile")} className={`flex items-center justify-center w-full h-full ${activeTab === "profile" ? "text-[#1a56db]" : "text-[#475569]"}`}><ProfileIcon className="w-6 h-6" /></button>
+          </div>
+
+          {/* Half-in / Half-out Large Transparent Floating Logo */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 flex items-center justify-center w-36 h-36 pointer-events-none">
+            <img src="./logo.png" alt="Brand Logo" className="w-full h-full object-contain filter drop-shadow-[0_10px_16px_rgba(0,0,0,0.2)]" />
+          </div>
+
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        {/* Active View Switching */}
+        {activeTab === "home" && <HomeView />}
+        
+        {activeTab === "active" && (
+          <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-8 text-center text-[#64748b]">
+            <h1 className="text-xl font-bold text-[#1e293b]">Active Numbers Content</h1>
+          </div>
+        )}
+        {activeTab === "history" && (
+          <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-8 text-center text-[#64748b]">
+            <h1 className="text-xl font-bold text-[#1e293b]">History Log Content</h1>
+          </div>
+        )}
+        {activeTab === "profile" && (
+          <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-8 text-center text-[#64748b]">
+            <h1 className="text-xl font-bold text-[#1e293b]">Profile View Content</h1>
+          </div>
+        )}
+      </main>
+
+    </div>
+  );
 }
