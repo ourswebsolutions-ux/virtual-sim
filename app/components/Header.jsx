@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
+import { ShowError, ShowSuccess } from "@/lib/toast";
+
 import { useRouter } from 'next/navigation';
 
 export default function Header() {
@@ -35,6 +37,7 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
+    ShowSuccess("Logout successful!");
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsLoggedIn(false);
@@ -43,16 +46,46 @@ export default function Header() {
     router.push('/');
   };
 
-  const handlePasswordReset = () => {
-    if (newPassword && newPassword === confirmPassword) {
-      alert('Password reset successful!');
-      setNewPassword('');
-      setConfirmPassword('');
-    } else {
-      alert('Passwords do not match!');
-    }
-  };
+  const handlePasswordReset = async () => {
+    alert(confirmPassword)
+  if (!newPassword || !confirmPassword) {
+    alert("Please fill all fields");
+    return;
+  }
 
+  if (newPassword !== confirmPassword) {
+    alert("Passwords do not match!");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/reset-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: user?.email, // or from input field
+        newPassword: newPassword,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Reset failed");
+      return;
+    }
+
+    alert("Password reset successful!");
+
+    setNewPassword("");
+    setConfirmPassword("");
+  } catch (error) {
+    console.error(error);
+    alert("Server error");
+  }
+};
   const copyNumber = () => {
     navigator.clipboard.writeText('+92 321 7906064');
     alert('Number copied!');
@@ -92,7 +125,7 @@ export default function Header() {
             <div className="hidden md:flex items-center space-x-4">
               {!isLoggedIn ? (
                 <>
-                  <button onClick={() => setShowSignIn(true)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Sign In</button>
+                  {/* <button onClick={() => setShowSignIn(true)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Sign In</button> */}
                   <button onClick={() => setShowSignUp(true)} className="px-4 py-2 text-sm font-medium text-white bg-[#06B6D4] hover:bg-slate-800 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-slate-900/20">Get Started</button>
                 </>
               ) : (
