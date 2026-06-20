@@ -84,7 +84,7 @@ export default function About() {
 
         <div className="mt-16 bg-white rounded-2xl border border-slate-200/60 p-8 sm:p-12">
           <div className="max-w-3xl mx-auto text-center">
-            <h3 className="text-2xl font-bold text-[#2563EB] mb-4">
+            <h3 className="text-2xl font-bold text-[#2563EB] mb-4" href="https://wa.me/923217906064">
               Why choose VNumHub?
             </h3>
             <p className="text-slate-600 leading-relaxed mb-8">
@@ -92,7 +92,7 @@ export default function About() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="#checkout"
+                href="https://wa.me/923217906064"
                 className="px-6 py-3 bg-[#06B6D4] text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors"
               >
                 Get Number Now
