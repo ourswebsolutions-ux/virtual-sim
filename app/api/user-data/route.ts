@@ -2,9 +2,11 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
-    const { userId } = await req.json();
+    const { searchParams } = new URL(req.url);
+
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return Response.json(
@@ -14,13 +16,11 @@ export async function POST(req: Request) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        balance: true,
-        createdAt: true,
+      where: {
+        id: userId,
+      },
+      include: {
+        numbers: true,
       },
     });
 
@@ -38,8 +38,8 @@ export async function POST(req: Request) {
   } catch (error: any) {
     return Response.json(
       {
-        message: "Server error",
-        error: error.message,
+        success: false,
+        message: error.message,
       },
       { status: 500 }
     );

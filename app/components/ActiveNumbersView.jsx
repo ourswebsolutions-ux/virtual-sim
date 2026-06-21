@@ -21,6 +21,7 @@ export default function ActiveNumbersView({ setActiveTab }) {
   const fetchActiveNumbers = async () => {
     if (!userId) {
       setError("User not logged in. Please login again.");
+      
       setLoading(false);
       return;
     }
@@ -59,7 +60,7 @@ export default function ActiveNumbersView({ setActiveTab }) {
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || "Something went wrong");
+     ShowError(err.message || "Failed to load numbers Please wait 10 mints");
     } finally {
       setLoading(false);
     }
@@ -87,14 +88,15 @@ export default function ActiveNumbersView({ setActiveTab }) {
       });
 
       if (res.ok) {
-        alert("Number cancelled successfully");
+        ShowSuccess("Number cancelled successfully");
+
         fetchActiveNumbers();
       } else {
         const data = await res.json();
         alert(data.message || "Failed to cancel");
       }
     } catch (err) {
-      alert("Error cancelling number");
+      ShowError(data.message || "Failed to cancel");
     }
   };
 
