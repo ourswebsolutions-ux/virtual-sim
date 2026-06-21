@@ -14,12 +14,13 @@ export default function AdminPriceManager() {
     }
   }, [router]);
 
-  // --- STATE 1: PRICING CARD MANAGEMENT (STRICT EDIT TOGGLE) ---
-  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  // ========================================================
+  // 🚫 COMMITTED / COMMENTED OUT: OLD PRICING LOGIC (CARD 1 OLD)
+  // ========================================================
+  /*
   const [selectedCountry, setSelectedCountry] = useState("UK");
   const [selectedPlatform, setSelectedPlatform] = useState("facebook");
 
-  // Alag Alag prices database structures
   const [countryPrices, setCountryPrices] = useState({
     UK: "40",
     Canada: "50",
@@ -31,11 +32,9 @@ export default function AdminPriceManager() {
     reddit: "5",
   });
 
-  // Temporary local states edit mode ke liye
   const [tempCountryPrice, setTempCountryPrice] = useState(countryPrices[selectedCountry]);
   const [tempPlatformPrice, setTempPlatformPrice] = useState(platformPrices[selectedPlatform]);
 
-  // Sync temp values when selections shift naturally during view mode
   useEffect(() => {
     if (!isEditingPrice) {
       setTempCountryPrice(countryPrices[selectedCountry]);
@@ -43,9 +42,34 @@ export default function AdminPriceManager() {
     }
   }, [selectedCountry, selectedPlatform, countryPrices, platformPrices, isEditingPrice]);
 
+  const totalCalculated = (Number(countryPrices[selectedCountry]) || 0) + (Number(platformPrices[selectedPlatform]) || 0);
+  */
+  // ========================================================
+
+
+  // ========================================================
+  // 🚫 COMMITTED / COMMENTED OUT: EMERGENCY SYSTEM STOP LOGIC (CARD 3 OLD)
+  // ========================================================
+  /*
+  const [isGeneratingNumbers, setIsGeneratingNumbers] = useState(true);
+  */
+  // ========================================================
+
+
+  // --- STATE 1: NEW SIMPLIFIED PRICING CARD MANAGEMENT ---
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [globalPrice, setGlobalPrice] = useState("50"); // Main absolute system price
+  const [tempPrice, setTempPrice] = useState(globalPrice);
+
+  // Sync back if edit mode is closed without saving
+  useEffect(() => {
+    if (!isEditingPrice) {
+      setTempPrice(globalPrice);
+    }
+  }, [globalPrice, isEditingPrice]);
+
   const handleSavePrice = () => {
-    setCountryPrices((prev) => ({ ...prev, [selectedCountry]: tempCountryPrice }));
-    setPlatformPrices((prev) => ({ ...prev, [selectedPlatform]: tempPlatformPrice }));
+    setGlobalPrice(tempPrice);
     setIsEditingPrice(false);
   };
 
@@ -64,11 +88,35 @@ export default function AdminPriceManager() {
     setIsEditingApi(false);
   };
 
-  // --- STATE 3: EMERGENCY SYSTEM STOP CARD ---
-  const [isGeneratingNumbers, setIsGeneratingNumbers] = useState(true);
+  // --- STATE 3: NEW ADMIN EMAIL & BALANCE ALLOCATION CARD ---
+  const [adminAllocation, setAdminAllocation] = useState({
+    userEmail: "",
+    topUpAmount: "",
+  });
+  const [allocationStatus, setAllocationStatus] = useState({ type: "", message: "" });
+  const [isSubmittingBalance, setIsSubmittingBalance] = useState(false);
 
-  // Total calculated helper display
-  const totalCalculated = (Number(countryPrices[selectedCountry]) || 0) + (Number(platformPrices[selectedPlatform]) || 0);
+  const handleAllocateBalance = (e) => {
+    e.preventDefault();
+    if (!adminAllocation.userEmail || !adminAllocation.topUpAmount) {
+      setAllocationStatus({ type: "error", message: "Please fill all required inputs." });
+      return;
+    }
+
+    setIsSubmittingBalance(true);
+    setAllocationStatus({ type: "", message: "" });
+
+    // Mock API simulation response loop
+    setTimeout(() => {
+      setIsSubmittingBalance(false);
+      setAllocationStatus({ 
+        type: "success", 
+        message: `Successfully credited Rs. ${adminAllocation.topUpAmount} to ${adminAllocation.userEmail}` 
+      });
+      // Clear inputs upon execution
+      setAdminAllocation({ userEmail: "", topUpAmount: "" });
+    }, 1200);
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] w-full pb-28 md:pb-12 selection:bg-blue-100">
@@ -92,25 +140,19 @@ export default function AdminPriceManager() {
         {/* ROW 1: EQUAL TOP CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
           
-          {/* CARD 1: SPLIT PRICING CONTROLLER (STRICT HIDDEN DROPDOWNS) */}
+          {/* CARD 1: PRICE CONTROLLER */}
           <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm relative group hover:border-blue-100 transition-all flex flex-col justify-between">
             <div>
-              {/* Header inside card with Edit toggler */}
-              <div className="flex items-center justify-between border-b border-slate-50 pb-3 mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pricing Matrix</span>
+              {/* Header with Switcher Icon */}
+              <div className="flex items-center justify-between border-b border-slate-50 pb-3 mb-5">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Rate Settings</span>
                 
                 <button
-                  onClick={() => {
-                    if (isEditingPrice) {
-                      setTempCountryPrice(countryPrices[selectedCountry]);
-                      setTempPlatformPrice(platformPrices[selectedPlatform]);
-                    }
-                    setIsEditingPrice(!isEditingPrice);
-                  }}
+                  onClick={() => setIsEditingPrice(!isEditingPrice)}
                   className={`p-2 rounded-xl transition-all ${
                     isEditingPrice ? "bg-amber-50 text-amber-600 border border-amber-100" : "bg-slate-50 hover:bg-slate-100 text-slate-600"
                   }`}
-                  title={isEditingPrice ? "Cancel Editing" : "Edit Settings"}
+                  title={isEditingPrice ? "Cancel" : "Edit Price"}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.3" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
@@ -118,107 +160,48 @@ export default function AdminPriceManager() {
                 </button>
               </div>
 
-              {/* Form Controls / Static Preview Panels */}
-              <div className="space-y-4">
+              {/* Strict Dynamic Form View Render */}
+              <div className="space-y-2">
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                  Standard Numbers Unit Cost
+                </label>
                 
-                {/* 1. Country Setting Section */}
-                <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1">Country Base Price</label>
-                  {isEditingPrice ? (
-                    <div className="space-y-2 mt-1.5">
-                      <div className="relative">
-                        <select
-                          value={selectedCountry}
-                          onChange={(e) => setSelectedCountry(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none appearance-none cursor-pointer"
-                        >
-                          <option value="UK">🇬🇧 United Kingdom (UK)</option>
-                          <option value="Canada">🇨🇦 Canada</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-slate-400">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-slate-500">Rs.</span>
-                        <input
-                          type="number"
-                          value={tempCountryPrice}
-                          onChange={(e) => setTempCountryPrice(e.target.value)}
-                          className="w-full px-2 py-1.5 text-xs font-bold border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                        {selectedCountry === "UK" ? "🇬🇧" : "🇨🇦"} {selectedCountry === "UK" ? "United Kingdom" : "Canada"}
-                      </span>
-                      <span className="text-xs sm:text-sm font-black text-slate-700">Rs. {countryPrices[selectedCountry]}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. Platform Setting Section */}
-                <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1">Platform Service Fee</label>
-                  {isEditingPrice ? (
-                    <div className="space-y-2 mt-1.5">
-                      <div className="relative">
-                        <select
-                          value={selectedPlatform}
-                          onChange={(e) => setSelectedPlatform(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none appearance-none cursor-pointer"
-                        >
-                          <option value="facebook">Facebook App</option>
-                          <option value="twitter">Twitter / X</option>
-                          <option value="reddit">Reddit Forum</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-slate-400">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-slate-500">Rs.</span>
-                        <input
-                          type="number"
-                          value={tempPlatformPrice}
-                          onChange={(e) => setTempPlatformPrice(e.target.value)}
-                          className="w-full px-2 py-1.5 text-xs font-bold border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs sm:text-sm font-bold text-slate-800 capitalize">
-                        {selectedPlatform}
-                      </span>
-                      <span className="text-xs sm:text-sm font-black text-slate-700">Rs. {platformPrices[selectedPlatform]}</span>
-                    </div>
-                  )}
-                </div>
-
+                {isEditingPrice ? (
+                  <div className="flex items-center gap-2 mt-2 max-w-xs animate-fadeIn">
+                    <span className="text-sm font-bold text-slate-600">Rs.</span>
+                    <input
+                      type="number"
+                      value={tempPrice}
+                      onChange={(e) => setTempPrice(e.target.value)}
+                      className="w-full bg-slate-50 border border-blue-400 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none"
+                      placeholder="Enter amount"
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  <div className="py-2 animate-fadeIn">
+                    <span className="text-3xl font-black text-slate-950 tracking-tight">
+                      Rs. {globalPrice}
+                    </span>
+                    <span className="text-[11px] block font-semibold text-slate-400 mt-1">
+                      * Active baseline consumer rate across all terminals.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Total Dynamic Display Box */}
-            <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">End User Total Price</span>
-                <span className="text-lg font-black text-blue-600 tracking-tight block mt-0.5">
-                  Rs. {totalCalculated}
-                </span>
-              </div>
-
-              {isEditingPrice && (
+            {/* Context Actions Row */}
+            {isEditingPrice && (
+              <div className="mt-6 pt-3.5 border-t border-slate-50 flex justify-end">
                 <button
                   onClick={handleSavePrice}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-[0.98]"
                 >
-                  Save All Prices
+                  Save New Price
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* CARD 2: API CONNECTOR MANAGER */}
@@ -321,46 +304,114 @@ export default function AdminPriceManager() {
 
         </div>
 
-        {/* ROW 2: CENTERED EMERGENCY SERVER CONTROLLER CARD */}
+        {/* ROW 2: NEW CENTERED MANUAL USER BALANCE ALLOCATOR CARD */}
         <div className="flex justify-center w-full">
-          <div className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-center relative overflow-hidden hover:border-red-100 transition-all">
+          <div className="w-full max-w-lg bg-white border border-slate-100 rounded-2xl p-5 sm:p-6 shadow-sm relative overflow-hidden hover:border-blue-100 transition-all">
             
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <span className={`w-2.5 h-2.5 rounded-full ${isGeneratingNumbers ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}></span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                System Generator Status: {isGeneratingNumbers ? "Active" : "Paused"}
+            <div className="flex items-center justify-between border-b border-slate-50 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Credit Core System
+                </span>
+              </div>
+              <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md font-bold uppercase">
+                Manual Panel
               </span>
             </div>
 
-            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight mb-1">
-              Virtual Numbers Dispatcher
-            </h3>
-            <p className="text-slate-400 text-xs max-w-xs mx-auto leading-relaxed mb-5">
-              Emergency kill-switch mechanism. Stopping this will halt all new real-time online virtual number pools allocations instantly.
-            </p>
+            <div className="text-center mb-5">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight mb-1">
+                Allocate User Balance
+              </h3>
+              <p className="text-slate-400 text-xs max-w-xs mx-auto leading-relaxed">
+                Directly deposit financial tokens into client balance pools using official registered credentials.
+              </p>
+            </div>
 
-            <button
-              onClick={() => setIsGeneratingNumbers(!isGeneratingNumbers)}
-              className={`w-full py-3 px-4 font-bold rounded-xl transition-all text-xs sm:text-sm active:scale-[0.99] border ${
-                isGeneratingNumbers
-                  ? "bg-red-50 hover:bg-red-100 text-red-600 border-red-200/60 shadow-sm shadow-red-50"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white border-transparent shadow-md shadow-emerald-100"
-              }`}
-            >
-              {isGeneratingNumbers ? (
-                <div className="flex items-center justify-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z" /></svg>
-                  <span>Stop Numbers Generation</span>
+            {/* Allocation Form Layout */}
+            <form onSubmit={handleAllocateBalance} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Email Address Input */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    User Account Email
+                  </label>
+                  <input
+                    type="email"
+                    value={adminAllocation.userEmail}
+                    onChange={(e) => setAdminAllocation({ ...adminAllocation, userEmail: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                    placeholder="user@example.com"
+                  />
                 </div>
-              ) : (
-                <div className="flex items-center justify-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg>
-                  <span>Resume Numbers Generation</span>
+
+                {/* Balance Amount Input */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Amount to Add (Rs.)
+                  </label>
+                  <input
+                    type="number"
+                    value={adminAllocation.topUpAmount}
+                    onChange={(e) => setAdminAllocation({ ...adminAllocation, topUpAmount: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-black text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                    placeholder="e.g. 500"
+                  />
+                </div>
+              </div>
+
+              {/* Status Alert feedback loop messages */}
+              {allocationStatus.message && (
+                <div className={`p-3 rounded-xl text-xs font-semibold text-center animate-fadeIn ${
+                  allocationStatus.type === "success" 
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
+                    : "bg-red-50 text-red-700 border border-red-100"
+                }`}>
+                  {allocationStatus.message}
                 </div>
               )}
-            </button>
+
+              {/* Submit Button Trigger */}
+              <button
+                type="submit"
+                disabled={isSubmittingBalance}
+                className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-bold rounded-xl transition-all text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 active:scale-[0.99]"
+              >
+                {isSubmittingBalance ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Processing Deposit...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    <span>Update & Credit Balance</span>
+                  </>
+                )}
+              </button>
+            </form>
+
           </div>
         </div>
+
+        {/* =======================================================
+            🚫 COMMITTED / COMMENTED OUT: OLD CARD 3 UI STRUCTURE 
+            (Agar apko emergency button dobara chalana ho to isko uncomment kr skte hain)
+            =======================================================
+        {false && (
+          <div className="flex justify-center w-full mt-6">
+            <div className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-center">
+               <h3>Virtual Numbers Dispatcher (Old Card 3)</h3>
+            </div>
+          </div>
+        )}
+        ======================================================= */}
 
       </div>
     </div>
