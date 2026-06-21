@@ -61,7 +61,26 @@ export default function AdminPriceManager() {
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [globalPrice, setGlobalPrice] = useState("50"); // Main absolute system price
   const [tempPrice, setTempPrice] = useState(globalPrice);
+const [isSavingPrice, setIsSavingPrice] = useState(false); // ← ADD THIS LINE
 
+  // ← ADD THIS HOOK
+  useEffect(() => {
+    const fetchCurrentPrice = async () => {
+      try {
+        const res = await fetch("/api/update-price", { method: "GET" });
+        const data = await res.json();
+        
+        if (data.success) {
+          setGlobalPrice(String(data.price));
+          setTempPrice(String(data.price));
+        }
+      } catch (err) {
+        console.error("Failed fetching database price configuration:", err);
+      }
+    };
+    
+    fetchCurrentPrice();
+  }, []);
   // Sync back if edit mode is closed without saving
   useEffect(() => {
     if (!isEditingPrice) {
@@ -69,9 +88,40 @@ export default function AdminPriceManager() {
     }
   }, [globalPrice, isEditingPrice]);
 
-  const handleSavePrice = () => {
-    setGlobalPrice(tempPrice);
-    setIsEditingPrice(false);
+  // ← REPLACE OLD FUNCTION WITH THIS
+  const handleSavePrice = async () => {
+    if (!tempPrice || isNaN(Number(tempPrice))) {
+      ShowError("Please enter a valid price amount.");
+      return;
+    }
+
+    try {
+      setIsSavingPrice(true);
+      
+      const res = await fetch("/api/update-price", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          price: Number(tempPrice),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to update price.");
+      }
+
+      setGlobalPrice(String(data.price));
+      setIsEditingPrice(false);
+      ShowSuccess("Global system price updated successfully!");
+    } catch (err) {
+      ShowError(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsSavingPrice(false);
+    }
   };
 
   // --- STATE 2: API CONFIGURATION CARD ---
