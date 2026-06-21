@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { ShowError, ShowSuccess } from "@/lib/toast";
 
 const countries = [
   { name: "United States", flag: "🇺🇸", code: "0" },
   { name: "Canada", flag: "🇨🇦", code: "1" }
-
 ];
 
 const services = [
@@ -14,12 +14,73 @@ const services = [
   { name: "Rabbit", code: "ra" }
 ];
 
-export default function HomeView({ setActiveTab = () => {} }: any) {
+export default function HomeView({ setActiveTab = () => { } }: any) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [selectedService, setSelectedService] = useState(services[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [price, setPrice] = useState("");
+  const [userData, setUserData] = useState(null);
+  const [showTopUpPopup, setShowTopUpPopup] = useState(false);
+
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+        if (!user?.id) return;
+
+        const res = await fetch(`/api/user-data?userId=${user.id}`);
+        const data = await res.json();
+        //  console.log(data,"dffs")
+        if (data.success) {
+          setUserData(data.user);
+        }
+      } catch (error) {
+        console.error(error);
+        ShowError("Failed to load user data");
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        const res = await fetch("/api/price");
+        const data = await res.json();
+        console.log(data)
+        if (data.success) {
+          setPrice(data.price);
+        }
+      } catch (error) {
+        console.error("Failed to fetch price", error);
+        ShowError("Failed to load price");
+      }
+    };
+
+    fetchPrice();
+  }, []);
+
+  const copyNumber = async () => {
+    try {
+      await navigator.clipboard.writeText("+923217906064");
+      ShowSuccess("WhatsApp number copied");
+    } catch {
+      ShowError("Failed to copy number");
+    }
+  };
+
+  const openWhatsApp = () => {
+    window.open(
+      "https://wa.me/923217906064",
+      "_blank"
+    );
+  };
 
   const handleGetNumber = async () => {
     setLoading(true);
@@ -28,9 +89,8 @@ export default function HomeView({ setActiveTab = () => {} }: any) {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-console.log(user, user?.id);
 
-const userId = user?.id;  
+      const userId = user?.id;
 
       const res = await fetch("/api/create-number", {
         method: "POST",
@@ -44,10 +104,12 @@ const userId = user?.id;
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to get number");
-
+      ShowSuccess("Number generated successfully");
       setModalOpen(false);
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      const message = err.message || "Something went wrong";
+      setError(message);
+      ShowError(message);
     } finally {
       setLoading(false);
     }
@@ -82,14 +144,30 @@ const userId = user?.id;
       </div>
 
       <button
-        onClick={() => setModalOpen(true)}
+        onClick={() => {
+          const balance = Number(userData?.balance || 0);
+          // const balance = Number(55);
+
+          const currentPrice = Number(price || 0);
+
+          if (balance < currentPrice) {
+
+            ShowError("Insufficient balance");
+            setShowTopUpPopup(true);
+            return;
+          }
+
+          setModalOpen(true);
+        }}
         className="relative flex items-center justify-center gap-3 px-8 py-4 w-full max-w-[280px] bg-gradient-to-r from-[#2563EB] to-[#2563EB] text-white font-bold rounded-2xl shadow-lg shadow-[#2563EB]/20 hover:opacity-95 active:scale-[0.98] transition-all group"
       >
         <svg className="w-5 h-5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
         <span>Get Number</span>
-        <span className="bg-white/15 px-2 py-0.5 rounded-md text-xs font-semibold backdrop-blur-sm">Rs. 55</span>
+        <span className="bg-white/15 px-2 py-0.5 rounded-md text-xs font-semibold backdrop-blur-sm">
+          Rs. {price}
+        </span>
       </button>
 
       {/* Modal - Updated with new color scheme */}
@@ -143,6 +221,69 @@ const userId = user?.id;
                 {loading ? "Generating..." : "Generate"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showTopUpPopup && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#06B6D4]/50"
+          onClick={() => setShowTopUpPopup(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-8 text-center">
+              <div className="mx-auto w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-6">
+                <span className="text-4xl">💬</span>
+              </div>
+
+              <h2 className="text-2xl text-[#06B6D4] font-semibold mb-1">
+                Top Up Your Account
+              </h2>
+
+              <p className="text-slate-500 mb-8">
+                Your balance is insufficient. Contact us on WhatsApp to add balance.
+              </p>
+
+              <div className="bg-slate-50 rounded-xl p-4 mb-8">
+                <div className="text-xs text-slate-500 mb-1 text-left">
+                  WhatsApp Number:
+                </div>
+
+                <div className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border">
+                  <span className="font-medium text-black">
+                    +92 321 7906064
+                  </span>
+
+                  <button
+                    onClick={copyNumber}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    📋
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={openWhatsApp}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-medium flex items-center justify-center gap-2"
+              >
+                💬 Open WhatsApp
+              </button>
+
+              <p className="text-xs text-slate-500 mt-6">
+                Send a message with your account details to top up
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowTopUpPopup(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
