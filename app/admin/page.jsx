@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ShowError, ShowSuccess } from "@/lib/toast";
 
 export default function AdminPriceManager() {
   const router = useRouter();
@@ -96,27 +97,60 @@ export default function AdminPriceManager() {
   const [allocationStatus, setAllocationStatus] = useState({ type: "", message: "" });
   const [isSubmittingBalance, setIsSubmittingBalance] = useState(false);
 
-  const handleAllocateBalance = (e) => {
-    e.preventDefault();
-    if (!adminAllocation.userEmail || !adminAllocation.topUpAmount) {
-      setAllocationStatus({ type: "error", message: "Please fill all required inputs." });
-      return;
-    }
+  const handleAllocateBalance = async (e) => {
+  e.preventDefault();
 
+  if (!adminAllocation.userEmail || !adminAllocation.topUpAmount) {
+    ShowError("Please fill all required inputs.");
+    return;
+  }
+
+  try {
     setIsSubmittingBalance(true);
     setAllocationStatus({ type: "", message: "" });
 
-    // Mock API simulation response loop
-    setTimeout(() => {
-      setIsSubmittingBalance(false);
-      setAllocationStatus({ 
-        type: "success", 
-        message: `Successfully credited Rs. ${adminAllocation.topUpAmount} to ${adminAllocation.userEmail}` 
-      });
-      // Clear inputs upon execution
-      setAdminAllocation({ userEmail: "", topUpAmount: "" });
-    }, 1200);
-  };
+    const res = await fetch("/api/price", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: adminAllocation.userEmail,
+        amount: Number(adminAllocation.topUpAmount),
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update balance");
+    }
+
+    // ✅ SUCCESS
+    ShowSuccess(`Rs. ${adminAllocation.topUpAmount} credited to ${adminAllocation.userEmail}`);
+
+    setAllocationStatus({
+      type: "success",
+      message: data.message || "Balance updated successfully",
+    });
+
+    setAdminAllocation({ userEmail: "", topUpAmount: "" });
+
+  } catch (err) {
+    const message = err.message || "Something went wrong";
+
+    // ❌ ERROR TOAST
+    ShowError(message);
+
+    setAllocationStatus({
+      type: "error",
+      message,
+    });
+
+  } finally {
+    setIsSubmittingBalance(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#f8fafc] w-full pb-28 md:pb-12 selection:bg-blue-100">

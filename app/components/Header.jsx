@@ -17,8 +17,33 @@ export default function Header() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showTopUpPopup, setShowTopUpPopup] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   const router = useRouter();
+
+
+  useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const user = JSON.parse(localStorage.getItem("user") || "{}");
+  
+          if (!user?.id) return;
+  
+          const res = await fetch(`/api/user-data?userId=${user.id}`);
+          const data = await res.json();
+           console.log(data.user,"dffs")
+          if (data.success) {
+            setUserData(data.user);
+          }
+        } catch (error) {
+          console.error(error);
+          ShowError("Failed to load user data");
+        }
+      };
+  
+      fetchUser();
+    }, []);
+  
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -114,7 +139,7 @@ export default function Header() {
                   <div onClick={() => setShowTopUpPopup(true)} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer hover:bg-slate-50">
                     <div>
                       <p className="text-[10px] text-slate-500 leading-none">Balance</p>
-                      <p className="text-sm font-semibold text-slate-900">Rs. 0.00</p>
+                      <p className="text-sm font-semibold text-slate-900">Rs. {userData?.balance}</p>
                     </div>
                     <button className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center text-lg font-bold hover:bg-green-700 transition">+</button>
                   </div>
@@ -132,7 +157,7 @@ export default function Header() {
                 <div onClick={() => setShowTopUpPopup(true)} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer hover:bg-slate-50">
                   <div>
                     <p className="text-[10px] text-slate-500 leading-none">Balance</p>
-                    <p className="text-sm font-semibold text-slate-900">Rs. 0.00</p>
+                    <p className="text-sm font-semibold text-slate-900">Rs. {userData?.balance}</p>
                   </div>
                   <button className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center text-lg font-bold hover:bg-green-700">+</button>
                 </div>
@@ -172,7 +197,7 @@ export default function Header() {
                       <p className="text-sm text-slate-500">{user?.email}</p>
                     </div>
                   </div>
-                  <div className="flex justify-between"><span className="text-slate-500">Balance</span><span className="font-semibold text-green-600">Rs. 0.00</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Balance</span><span className="font-semibold text-green-600">Rs. {userData?.balance}</span></div>
                 </div>
               )}
 

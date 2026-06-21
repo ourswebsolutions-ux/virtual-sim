@@ -23,34 +23,42 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { price } = await req.json();
+    const { email, amount } = await req.json();
 
-    if (price === undefined) {
+    if (!email || amount === undefined) {
       return Response.json(
-        { message: "Price is required" },
+        { message: "Email and amount are required" },
         { status: 400 }
       );
     }
 
-    const existing = await prisma.price.findFirst();
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    const result = existing
-      ? await prisma.price.update({
-          where: { id: existing.id },
-          data: {
-            price: Number(price),
-          },
-        })
-      : await prisma.price.create({
-          data: {
-            price: Number(price),
-          },
-        });
+    if (!user) {
+      return Response.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: {
+        balance: {
+          increment: Number(amount), // add balance (top-up)
+        },
+      },
+    });
 
     return Response.json({
       success: true,
-      message: "Price updated successfully",
-      price: result.price,
+      message: "User balance updated successfully",
+      user: {
+        email: updatedUser.email,
+        balance: updatedUser.balance,
+      },
     });
   } catch (error: any) {
     return Response.json(
