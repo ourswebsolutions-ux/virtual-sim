@@ -1,27 +1,35 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Phone, Clock, XCircle, Trash2, Search, Filter, ChevronDown, Check } from "lucide-react";
 
 export default function ActiveNumbersView({ setActiveTab }) {
   const [activeNumbers, setActiveNumbers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [filter, setFilter] = useState("active");
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Default: Show ALL
+  const [selectedFilters, setSelectedFilters] = useState(["All"]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  // Get userId from localStorage
+  const filterOptions = [
+    { value: "All", label: "All Status", icon: Filter, color: "slate" },
+    { value: "active", label: "Active", icon: Phone, color: "emerald" },
+    { value: "cancelled", label: "Cancelled", icon: XCircle, color: "slate" },
+    { value: "completed", label: "Completed", icon: Check, color: "blue" },
+  ];
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const id = user?.id || user?._id;
-    console.log("User from localStorage:", user);
-    console.log("Extracted userId:", id);
     setUserId(id);
   }, []);
 
   const fetchActiveNumbers = async () => {
     if (!userId) {
       setError("User not logged in. Please login again.");
-      
       setLoading(false);
       return;
     }
@@ -31,7 +39,6 @@ export default function ActiveNumbersView({ setActiveTab }) {
       setError(null);
 
       const res = await fetch(`/api/get-number?userId=${userId}`);
-
       if (!res.ok) throw new Error("Failed to fetch numbers");
 
       const data = await res.json();
@@ -39,18 +46,27 @@ export default function ActiveNumbersView({ setActiveTab }) {
       if (data.success) {
         const mapped = data.numbers.map((num) => {
           const timeLeft = calculateTimeLeft(num.expiresAt);
-          const isExpired = timeLeft === "Expired";
-          
+
+          const isCancelled = num.status === "CANCELLED";
+          const isCompleted = num.status === "COMPLETED";
+          const isActive = !isCancelled && !isCompleted;
+
+          const createdTime = num.createdAt ? new Date(num.createdAt).getTime() : 0;
+          const timeSinceCreation = Date.now() - createdTime;
+          const isFrozen = timeSinceCreation < 3 * 60 * 1000;
+
           return {
             id: num.id,
             phoneNumber: num.phoneNumber || num.number,
             service: num.service || "Unknown Service",
             timeLeft,
-            status: isExpired ? "Expired" : (num.status || "Waiting for SMS..."),
+            status: isCancelled ? "Cancelled" : isCompleted ? "Completed" : num.status || "Waiting for SMS...",
             activationId: num.activationId,
-            // Only ACTIVE + not expired can be cancelled
-            isCancellable: (num.status === "ACTIVE" || !num.status) && !isExpired,
-            isActive: (num.status === "ACTIVE" || !num.status) && !isExpired,
+            isCancelled,
+            isCompleted,
+            isActive,
+            isCancellable: !isCancelled && !isCompleted && !isFrozen,
+            canDelete: isCancelled || isCompleted,
           };
         });
 
@@ -60,7 +76,7 @@ export default function ActiveNumbersView({ setActiveTab }) {
       }
     } catch (err) {
       console.error(err);
-     ShowError(err.message || "Failed to load numbers Please wait 10 mints");
+      setError(err.message || "Failed to load numbers. Please retry.");
     } finally {
       setLoading(false);
     }
@@ -70,47 +86,39 @@ export default function ActiveNumbersView({ setActiveTab }) {
     if (!expiresAt) return "30:00";
     const diffMs = new Date(expiresAt).getTime() - Date.now();
     if (diffMs <= 0) return "Expired";
-
     const minutes = Math.floor(diffMs / 60000);
     const seconds = Math.floor((diffMs % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  // Cancel Number (only for non-expired active numbers)
   const handleCancel = async (numberId, activationId) => {
     if (!confirm("Are you sure you want to cancel this number?")) return;
-
     try {
       const res = await fetch("/api/cancel-number", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activationId }),
+        body: JSON.stringify({ activationId, userId }),
       });
-
       if (res.ok) {
-        ShowSuccess("Number cancelled successfully");
-
+        alert("Number cancelled successfully");
         fetchActiveNumbers();
       } else {
         const data = await res.json();
-        alert(data.message || "Failed to cancel");
+        alert(data.message || "Failed to cancel number");
       }
     } catch (err) {
-      ShowError(data.message || "Failed to cancel");
+      alert("Failed to cancel number");
     }
   };
 
-  // Permanent Delete
   const handleDelete = async (numberId) => {
     if (!confirm("Delete this number permanently from history?")) return;
-
     try {
       const res = await fetch("/api/cancel-number", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ numberId, userId }),
       });
-
       if (res.ok) {
         alert("Number deleted permanently");
         fetchActiveNumbers();
@@ -133,17 +141,62 @@ export default function ActiveNumbersView({ setActiveTab }) {
     return () => clearInterval(interval);
   }, [userId]);
 
-  const filteredNumbers = activeNumbers.filter((num) => {
-    if (filter === "active") return num.isActive;
-    if (filter === "inactive") return !num.isActive;
-    return true;
-  });
+  // Multi-filter logic with "All" support
+  const filteredNumbers = activeNumbers
+    .filter((num) => {
+      const matchesSearch =
+        num.phoneNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        num.service.toLowerCase().includes(searchQuery.toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      if (selectedFilters.includes("All")) return true;
+
+      const activeMatch = selectedFilters.includes("active") && num.isActive;
+      const cancelledMatch = selectedFilters.includes("cancelled") && num.isCancelled;
+      const completedMatch = selectedFilters.includes("completed") && num.isCompleted;
+
+      return activeMatch || cancelledMatch || completedMatch;
+    })
+    .sort((a, b) => (a.isActive && !b.isActive ? -1 : 1));
+
+  const toggleFilter = (value) => {
+    if (value === "All") {
+      setSelectedFilters(["All"]);
+      return;
+    }
+
+    // Remove "All" when selecting specific filters
+    let newFilters = selectedFilters.filter((f) => f !== "All");
+
+    if (newFilters.includes(value)) {
+      if (newFilters.length === 1) return; // prevent emptying all
+      newFilters = newFilters.filter((f) => f !== value);
+    } else {
+      newFilters = [...newFilters, value];
+    }
+
+    // If all specific filters are selected, switch to "All"
+    if (newFilters.length === 3) {
+      setSelectedFilters(["All"]);
+    } else {
+      setSelectedFilters(newFilters);
+    }
+  };
+
+  const getSelectedLabels = () => {
+    if (selectedFilters.includes("All")) return "All Status";
+    if (selectedFilters.length === 0) return "No Filter";
+    return selectedFilters
+      .map((val) => filterOptions.find((opt) => opt.value === val)?.label)
+      .join(", ");
+  };
 
   if (loading) {
     return (
-      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center py-24">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2563EB]"></div>
         </div>
       </div>
     );
@@ -151,108 +204,160 @@ export default function ActiveNumbersView({ setActiveTab }) {
 
   if (error) {
     return (
-      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-2xl text-center">
-          Error: {error}
-          <button onClick={fetchActiveNumbers} className="mt-3 text-sm underline hover:no-underline">Retry</button>
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 text-red-600 p-6 rounded-3xl text-center shadow-sm">
+          <p className="font-medium">Error: {error}</p>
+          <button 
+            onClick={fetchActiveNumbers} 
+            className="mt-4 px-5 py-2 bg-[#2563EB] text-white rounded-xl hover:bg-[#1e40af] transition-all text-sm font-semibold"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-6 animate-fadeIn">
-      
-      {/* Filter Buttons */}
-      <div className="mb-4 flex flex-wrap gap-3 justify-between">
-        <div className="flex gap-2">
-          <button onClick={() => setFilter("active")} className={`px-4 py-1.5 text-sm font-medium rounded-xl transition-all ${filter === "active" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"}`}>Active</button>
-          <button onClick={() => setFilter("inactive")} className={`px-4 py-1.5 text-sm font-medium rounded-xl transition-all ${filter === "inactive" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"}`}>Inactive</button>
-          <button onClick={() => setFilter("all")} className={`px-4 py-1.5 text-sm font-medium rounded-xl transition-all ${filter === "all" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"}`}>All</button>
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 animate-fadeIn">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-3xl font-black tracking-tight text-[#0F172A]">Active Numbers</h2>
+          <p className="text-slate-500 mt-1">Manage your virtual numbers</p>
         </div>
-
-        <button onClick={() => activeNumbers.length > 0 ? setActiveNumbers([]) : fetchActiveNumbers()} className="text-[10px] sm:text-xs bg-slate-200 text-slate-700 font-medium px-2.5 py-1.5 rounded-lg hover:bg-slate-300 transition-all">Toggle Empty</button>
+        <div className="text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-2xl text-slate-500 font-mono">
+          {filteredNumbers.length} total
+        </div>
       </div>
 
-      {/* Original Header - Unchanged */}
-      <div className="flex items-center justify-between bg-white border border-slate-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)] mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.557-5.144-3.874-6.703-6.7l1.293-.97.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-            </svg>
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        {/* Search */}
+        <div className="relative flex-1">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <Search size={18} />
           </div>
-          <h2 className="hidden sm:block text-lg sm:text-xl font-bold text-slate-900">Active Numbers</h2>
+          <input
+            type="text"
+            placeholder="Search phone or service..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-white border text-black border-slate-200 rounded-2xl focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] text-sm placeholder:text-slate-400"
+          />
         </div>
-        
-        <button onClick={() => setActiveTab("home")} className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto gap-1 text-slate-500 hover:text-slate-800 transition-colors border border-slate-100 sm:border-0 rounded-lg sm:rounded-none bg-slate-50/50 sm:bg-transparent" title="Back to Home">
-          <svg className="w-5 h-5 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-          </svg>
-          <span className="hidden sm:inline text-xs sm:text-sm font-bold">Back</span>
-        </button>
+
+        {/* Multi-Select Filter Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            className="flex items-center gap-2 px-5 py-3 bg-white border text-black border-slate-200 rounded-2xl hover:border-[#2563EB] transition-all text-sm font-semibold min-w-[200px]"
+          >
+            <Filter size={18} className="text-[#2563EB]" />
+            <span className="truncate">{getSelectedLabels()}</span>
+            <ChevronDown size={16} className={`ml-auto transition-transform ${showFilterDropdown ? "rotate-180" : ""}`} />
+          </button>
+
+          {showFilterDropdown && (
+            <div className="absolute mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 max-h-80 overflow-auto">
+              {filterOptions.map((option) => {
+                const Icon = option.icon;
+                const isSelected = selectedFilters.includes(option.value);
+                return (
+                  <div
+                    key={option.value}
+                    onClick={() => toggleFilter(option.value)}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50  text-black cursor-pointer"
+                  >
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? "bg-[#06B6D4] border-[#2563EB]" : "border-slate-300"}`}>
+                      {isSelected && <Check size={14} className="text-white" />}
+                    </div>
+                    <Icon size={18} className={`text-${option.color}-600`} />
+                    <span className="font-medium">{option.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* List */}
       {filteredNumbers.length === 0 ? (
-        <div className="w-full bg-white border border-dashed border-slate-200 rounded-[24px] sm:rounded-[32px] py-14 sm:py-20 px-4 text-center flex flex-col items-center justify-center shadow-sm">
-          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-            <svg className="w-7 h-7 sm:w-10 sm:h-10 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.557-5.144-3.874-6.703-6.7l1.293-.97.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-            </svg>
+        <div className="bg-white border border-slate-100 rounded-3xl py-20 text-center">
+          <div className="mx-auto w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+            <Phone className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-2">No active numbers</h3>
-          <p className="text-slate-400 text-xs sm:text-sm max-w-xs sm:max-w-sm leading-relaxed mb-6 sm:mb-8">You don't have any active numbers at the moment. Get one to start receiving SMS.</p>
-          <button onClick={() => setActiveTab("home")} className="px-6 py-3 sm:px-8 sm:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl sm:rounded-2xl shadow-md shadow-blue-500/10 hover:opacity-95 active:scale-[0.99] transition-all text-xs sm:text-sm">Get a Number</button>
+          <h3 className="text-xl font-semibold text-slate-700">No numbers found</h3>
+          <p className="text-slate-500 mt-2">Try changing your filters or search term</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:gap-4">
+        <div className="space-y-4">
           {filteredNumbers.map((num) => (
-            <div key={num.id} className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 relative overflow-hidden group hover:border-blue-100 transition-all">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-lg sm:rounded-xl flex items-center justify-center text-blue-600 font-bold text-xs sm:text-sm shrink-0">
-                  {num.service.charAt(0)}
-                </div>
-                <div>
-                  <h4 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">{num.phoneNumber}</h4>
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 text-[11px] sm:text-xs font-semibold text-slate-400">
-                    <span className="text-slate-600">{num.service}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md">
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                      </svg>
-                      {num.timeLeft} min left
-                    </span>
+            <div
+              key={num.id}
+              className="group bg-white border border-slate-100 hover:border-[#06B6D4]/30 rounded-3xl p-6 shadow-sm hover:shadow transition-all duration-200 flex flex-col sm:flex-row sm:items-center gap-6 relative overflow-hidden"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#06B6D4] flex items-center justify-center text-white flex-shrink-0">
+                    <Phone size={22} strokeWidth={2.5} />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-mono text-2xl font-bold tracking-tighter text-[#0F172A] break-all">
+                      {num.phoneNumber}
+                    </h4>
+                    <p className="text-sm text-slate-500 mt-0.5 line-clamp-1">{num.service}</p>
                   </div>
                 </div>
               </div>
-              
-              <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 border-t border-slate-50 pt-2.5 sm:border-0 sm:pt-0">
-                <div className="text-left sm:text-right sm:mr-2">
-                  <p className={`text-xs sm:text-sm font-bold ${num.isActive ? "text-emerald-600 animate-pulse" : "text-slate-500"}`}>
+
+              <div className="flex flex-col sm:items-end gap-3 sm:gap-4 w-full sm:w-auto">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-xs bg-slate-100 px-3 py-1 rounded-xl text-slate-500">
+                    <Clock size={14} />
+                    {num.timeLeft}
+                  </div>
+
+                  <div
+                    className={`px-3 py-1 text-xs font-bold rounded-xl ${
+                      num.isActive
+                        ? "bg-emerald-100 text-emerald-700"
+                        : num.isCompleted
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
                     {num.status}
-                  </p>
+                  </div>
                 </div>
 
-                {num.isCancellable ? (
-                  <button 
-                    onClick={() => handleCancel(num.id, num.activationId)}
-                    className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-slate-50 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-700 text-[11px] sm:text-xs font-bold rounded-xl border border-slate-100 transition-all active:scale-[0.98]"
-                  >
-                    Cancel
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => handleDelete(num.id)}
-                    className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95"
-                    title="Delete permanently"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.75">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.595 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.595-1.858L5 7m5 4v6m4-6v6m1-10V9a1 1 0 00-1 1v1M12 4v6m2-6V9" />
-                    </svg>
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {num.isCancellable ? (
+                    <button
+                      onClick={() => handleCancel(num.id, num.activationId)}
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-2xl border border-red-200 hover:bg-red-50 hover:text-red-600 text-red-600 transition-all active:scale-[0.985]"
+                    >
+                      <XCircle size={17} />
+                      Cancel
+                    </button>
+                  ) : num.canDelete ? (
+                    <button
+                      onClick={() => handleDelete(num.id)}
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-2xl transition-all active:scale-[0.985]"
+                    >
+                      <Trash2 size={17} />
+                      Delete
+                    </button>
+                  ) : (
+                    <div className="px-4 py-2.5 text-xs text-amber-600 bg-amber-50 rounded-2xl font-medium">
+                      Frozen (3 min)
+                    </div>
+                  )}
+                </div>
               </div>
+
+              <div className="absolute bottom-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-[#06B6D4]/30 to-transparent" />
             </div>
           ))}
         </div>

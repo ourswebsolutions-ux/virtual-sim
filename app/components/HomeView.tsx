@@ -4,14 +4,14 @@ import React, { useState, useEffect } from "react";
 import { ShowError, ShowSuccess } from "@/lib/toast";
 
 const countries = [
-  { name: "United States", flag: "🇺🇸", code: "0" },
-  { name: "Canada", flag: "🇨🇦", code: "1" }
+  { name: "United States", flag: "🇺🇸", code: "us" },
+  { name: "Canada", flag: "🇨🇦", code: "ca" }
 ];
 
 const services = [
-  { name: "Facebook", code: "fb" },
-  { name: "Twitter", code: "tw" },
-  { name: "Rabbit", code: "ra" }
+  { name: "Facebook", code: "facebook" },
+  { name: "Twitter", code: "twitter" },
+  { name: "Rabbit", code: "rabbit" }
 ];
 
 export default function HomeView({ setActiveTab = () => { } }: any) {

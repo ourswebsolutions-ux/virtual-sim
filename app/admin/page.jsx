@@ -209,15 +209,15 @@ const [isSavingPrice, setIsSavingPrice] = useState(false); // ← ADD THIS LINE
       <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-6 animate-fadeIn">
         
         {/* Main Section Header Banner */}
-        <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-xl sm:rounded-2xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)] mb-6">
-          <div className="w-11 h-11 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-md">
+        <div className="flex items-center gap-3 bg-whi border bg-[#06B6D4] border-slate-100 rounded-xl sm:rounded-2xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)] mb-6">
+          <div className="w-11 h-11 bg-slate-900 rounded-xl flex items-center  justify-center text-white shadow-md">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
             </svg>
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-900">Admin Control Center</h2>
-            <p className="text-slate-400 text-xs font-semibold">Manage worldwide virtual numbers prices and status</p>
+            <p className="text-white text-xs  font-semibold">Manage worldwide virtual numbers prices and status</p>
           </div>
         </div>
 
@@ -252,7 +252,7 @@ const [isSavingPrice, setIsSavingPrice] = useState(false); // ← ADD THIS LINE
                 
                 {isEditingPrice ? (
                   <div className="flex items-center gap-2 mt-2 max-w-xs animate-fadeIn">
-                    <span className="text-sm font-bold text-slate-600">Rs.</span>
+                    <span className="text-sm font-bold text-[#06B6D4]">Rs.</span>
                     <input
                       type="number"
                       value={tempPrice}
@@ -265,7 +265,7 @@ const [isSavingPrice, setIsSavingPrice] = useState(false); // ← ADD THIS LINE
                 ) : (
                   <div className="py-2 animate-fadeIn">
                     <span className="text-3xl font-black text-slate-950 tracking-tight">
-                      Rs. {globalPrice}
+                     <span className=" font-bold text-[#06B6D4]">Rs.</span>  {globalPrice}
                     </span>
                     <span className="text-[11px] block font-semibold text-slate-400 mt-1">
                       * Active baseline consumer rate across all terminals.
@@ -460,7 +460,7 @@ const [isSavingPrice, setIsSavingPrice] = useState(false); // ← ADD THIS LINE
               <button
                 type="submit"
                 disabled={isSubmittingBalance}
-                className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-bold rounded-xl transition-all text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 active:scale-[0.99]"
+                className="w-full py-3 px-4 bg-[#2563EB] hover:bg-slate-800 disabled:bg-slate-400 text-white font-bold rounded-xl transition-all text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 active:scale-[0.99]"
               >
                 {isSubmittingBalance ? (
                   <>

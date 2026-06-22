@@ -134,23 +134,47 @@ export default function Header() {
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
-              {isLoggedIn ? (
-                <div className="flex items-center gap-3">
-                  <div onClick={() => setShowTopUpPopup(true)} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer hover:bg-slate-50">
-                    <div>
-                      <p className="text-[10px] text-slate-500 leading-none">Balance</p>
-                      <p className="text-sm font-semibold text-slate-900">Rs. {userData?.balance}</p>
-                    </div>
-                    <button className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center text-lg font-bold hover:bg-green-700 transition">+</button>
-                  </div>
-                  <div onClick={() => setShowAccountPopup(!showAccountPopup)} className="w-10 h-10 rounded-full bg-[#06B6D4] text-white flex items-center justify-center font-semibold cursor-pointer" title={user?.fullName || 'Profile'}>
-                    {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
-                  </div>
-                </div>
-              ) : (
-                <button onClick={() => setShowSignUp(true)} className="px-4 py-2 text-sm font-medium text-white bg-[#06B6D4] hover:bg-slate-800 rounded-lg transition-all">Get Started</button>
-              )}
-            </div>
+  {isLoggedIn ? (
+    <div className="flex items-center gap-3">
+
+      {user?.email !== "rashidco197@gmail.com" && (
+        <div
+          onClick={() => setShowTopUpPopup(true)}
+          className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer hover:bg-slate-50"
+        >
+          <div>
+            <p className="text-[10px] text-slate-500 leading-none">
+              Balance
+            </p>
+            <p className="text-sm font-semibold text-slate-900">
+              Rs. {userData?.balance}
+            </p>
+          </div>
+
+          <button className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center text-lg font-bold hover:bg-green-700 transition">
+            +
+          </button>
+        </div>
+      )}
+
+      <div
+        onClick={() => setShowAccountPopup(!showAccountPopup)}
+        className="w-10 h-10 rounded-full bg-[#06B6D4] text-white flex items-center justify-center font-semibold cursor-pointer"
+        title={user?.fullName || "Profile"}
+      >
+        {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
+      </div>
+
+    </div>
+  ) : (
+    <button
+      onClick={() => setShowSignUp(true)}
+      className="px-4 py-2 text-sm font-medium text-white bg-[#06B6D4] hover:bg-slate-800 rounded-lg transition-all"
+    >
+      Get Started
+    </button>
+  )}
+</div>
 
             <div className="md:hidden">
               {isLoggedIn ? (
@@ -175,7 +199,7 @@ export default function Header() {
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Account Settings</h2>
+                  <h2 className="text-xl font-semibold text-black">Account Settings</h2>
                   <p className="text-sm text-slate-500">Manage your profile and security.</p>
                 </div>
                 <button onClick={() => setShowAccountPopup(false)} className="text-slate-400 hover:text-slate-600">✕</button>
@@ -188,8 +212,8 @@ export default function Header() {
 
               {activeTab === 'Details' && (
                 <div className="space-y-4 text-sm">
-                  <div className="flex items-center gap-3 mb-6 bg-slate-50 p-4 rounded-xl">
-                    <div className="w-12 h-12 rounded-full bg-[#06B6D4] text-white flex items-center justify-center text-2xl font-semibold">
+                  <div className="flex items-center gap-3 text-black mb-6 bg-slate-50 p-4 rounded-xl">
+                    <div className="w-12 h-12 rounded-full text-black bg-[#06B6D4] text- flex items-center justify-center text-2xl font-semibold">
                       {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                     <div>

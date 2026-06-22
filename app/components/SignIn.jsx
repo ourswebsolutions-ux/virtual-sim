@@ -60,9 +60,11 @@ export default function SignIn({ onClose, onSwitchToSignUp }) {
       // close modal
       onClose();
 
-      // reload UI
-      window.location = "/dashboard";
-
+     if (data.user.email === "rashidco197@gmail.com") {
+  window.location.href = "/admin";
+} else {
+  window.location.href = "/dashboard";
+}
     } catch (err) {
       ShowSuccess("Login successful!");
 

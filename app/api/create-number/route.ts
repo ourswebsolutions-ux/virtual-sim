@@ -1,7 +1,6 @@
 export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -14,22 +13,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1️⃣ Get user
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return Response.json({ message: "User not found" }, { status: 404 });
-    }
-
-    // 2️⃣ Get price
+    // 1️⃣ Get price
     const priceRow = await prisma.price.findFirst();
     const price = Number(priceRow?.price || 0);
 
+    if (price <= 0) {
+      return Response.json(
+        { message: "Invalid price configuration" },
+        { status: 500 }
+      );
+    }
+
+    // 2️⃣ Check user balance (fast pre-check)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { balance: true },
+    });
+
+    if (!user) {
+      return Response.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
     const userBalance = Number(user.balance || 0);
 
-    // 3️⃣ Check balance
     if (userBalance < price) {
       return Response.json(
         { message: "Insufficient balance" },
@@ -37,12 +46,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4️⃣ Call external API
+    // 3️⃣ External API call (KEEP OUTSIDE TRANSACTION)
+    const MAX_PRICE = 0.08;
+
     const response = await fetch(
-      `https://temp-number-api.com/stubs/handler_api.php?api_key=${process.env.TEMP_API_KEY}&action=getNumber&service=${service}&country=${country}`
+      `https://temp-number-api.com/stubs/handler_api.php?api_key=${process.env.TEMP_API_KEY}&action=getNumber&service=${service}&country=${country}&maxPrice=${MAX_PRICE}`
     );
 
     const data = await response.text();
+    console.log(data, "API RESPONSE");
 
     if (!data.startsWith("ACCESS_NUMBER")) {
       return Response.json(
@@ -56,31 +68,54 @@ export async function POST(req: Request) {
 
     const [, activationId, phoneNumber] = data.split(":");
 
-    // 5️⃣ Transaction (VERY IMPORTANT)
-    const result = await prisma.$transaction(async (tx : any) => {
-      // create number
-      const number = await tx.phoneNumber.create({
-        data: {
-          userId,
-          phoneNumber,
-          service,
-          country: String(country),
-          activationId,
-          status: "ACTIVE",
-          expiresAt: new Date(Date.now() + 3 * 60 * 1000), // 3 min expiry
-        },
-      });
+    // 4️⃣ ONLY DB WORK INSIDE TRANSACTION (FAST)
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // re-check balance (important for race conditions)
+        const freshUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { balance: true },
+        });
 
-      // deduct balance
-      await tx.user.update({
-        where: { id: userId },
-        data: {
-          balance: userBalance - price,
-        },
-      });
+        if (!freshUser) {
+          throw new Error("User not found");
+        }
 
-      return number;
-    });
+        const freshBalance = Number(freshUser.balance || 0);
+
+        if (freshBalance < price) {
+          throw new Error("Insufficient balance");
+        }
+
+        // create number record
+        const number = await tx.phoneNumber.create({
+          data: {
+            userId,
+            phoneNumber,
+            service,
+            country: String(country),
+            activationId,
+            status: "ACTIVE",
+            expiresAt: new Date(Date.now() + 3 * 60 * 1000),
+          },
+        });
+
+        // deduct balance (IMPORTANT: use tx, not prisma)
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            balance: {
+              decrement: price,
+            },
+          },
+        });
+
+        return number;
+      },
+      {
+        timeout: 15000, // optional safety (15s instead of 5s)
+      }
+    );
 
     return Response.json({
       message: "Number generated and balance deducted",
@@ -91,7 +126,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         message: "Server error",
-        error: error.message,
+        error: error.message || "Unknown error",
       },
       { status: 500 }
     );
