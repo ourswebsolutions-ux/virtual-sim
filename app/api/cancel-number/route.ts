@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { activationId } = await req.json();
+    const { userId, activationId } = await req.json();
 
     if (!activationId) {
       return Response.json(
@@ -24,11 +24,24 @@ export async function POST(req: Request) {
       );
     }
 
+    if (number.status === "CANCELLED") {
+      return Response.json(
+        {
+          success: false,
+          message: "Number already cancelled",
+        },
+        { status: 400 }
+      );
+    }
+
     const response = await fetch(
       `https://temp-number-api.com/stubs/handler_api.php?api_key=${process.env.TEMP_API_KEY}&action=setStatus&id=${activationId}&status=8`
     );
 
     const result = await response.text();
+
+    const priceRow = await prisma.price.findFirst();
+    const price = Number(priceRow?.price || 0);
 
     // ❌ DO NOT update DB if API denied cancel
     if (result === "EARLY_CANCEL_DENIED") {
@@ -40,16 +53,28 @@ export async function POST(req: Request) {
     }
 
     if (result.includes("ACCESS_CANCEL") || result.includes("OK")) {
-      await prisma.phoneNumber.update({
-        where: { id: number.id },
-        data: {
-          status: "CANCELLED",
-        },
+      await prisma.$transaction(async (tx) => {
+        await tx.phoneNumber.update({
+          where: { id: number.id },
+          data: {
+            status: "CANCELLED",
+          },
+        });
+
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            balance: {
+              increment: price,
+            },
+          },
+        });
       });
 
       return Response.json({
         success: true,
         message: "Number cancelled successfully",
+        refunded: price,
         response: result,
       });
     }
@@ -59,7 +84,6 @@ export async function POST(req: Request) {
       message: "Unknown response from provider",
       response: result,
     });
-
   } catch (error: any) {
     return Response.json(
       {
@@ -70,8 +94,6 @@ export async function POST(req: Request) {
     );
   }
 }
-
-
 
 export async function DELETE(req: Request) {
   try {
@@ -84,7 +106,6 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Optional security check
     const number = await prisma.phoneNumber.findUnique({
       where: {
         id: numberId,
@@ -98,7 +119,6 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Make sure user owns the number
     if (userId && number.userId !== userId) {
       return Response.json(
         { message: "Unauthorized" },
@@ -116,7 +136,6 @@ export async function DELETE(req: Request) {
       success: true,
       message: "Number cancelled successfully",
     });
-
   } catch (error: any) {
     return Response.json(
       {
