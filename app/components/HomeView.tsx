@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ShowError, ShowSuccess } from "@/lib/toast";
+import ActiveNumbersView from "./ActiveNumbersView";   // Adjust path if needed
 
 const countries = [
   { name: "United States", flag: "🇺🇸", code: "0" },
@@ -24,7 +25,6 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
   const [userData, setUserData] = useState(null);
   const [showTopUpPopup, setShowTopUpPopup] = useState(false);
 
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -34,7 +34,6 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
 
         const res = await fetch(`/api/user-data?userId=${user.id}`);
         const data = await res.json();
-        //  console.log(data,"dffs")
         if (data.success) {
           setUserData(data.user);
         }
@@ -47,13 +46,11 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
     fetchUser();
   }, []);
 
-
   useEffect(() => {
     const fetchPrice = async () => {
       try {
         const res = await fetch("/api/price");
         const data = await res.json();
-        console.log(data)
         if (data.success) {
           setPrice(data.price);
         }
@@ -76,10 +73,7 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
   };
 
   const openWhatsApp = () => {
-    window.open(
-      "https://wa.me/923217906064",
-      "_blank"
-    );
+    window.open("https://wa.me/923217906064", "_blank");
   };
 
   const handleGetNumber = async () => {
@@ -88,8 +82,6 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
 
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-
       const userId = user?.id;
 
       const res = await fetch("/api/create-number", {
@@ -104,6 +96,7 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to get number");
+
       ShowSuccess("Number generated successfully");
       setModalOpen(false);
     } catch (err: any) {
@@ -146,12 +139,9 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
       <button
         onClick={() => {
           const balance = Number(userData?.balance || 0);
-          // const balance = Number(55);
-
           const currentPrice = Number(price || 0);
 
           if (balance < currentPrice) {
-
             ShowError("Insufficient balance");
             setShowTopUpPopup(true);
             return;
@@ -170,7 +160,12 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
         </span>
       </button>
 
-      {/* Modal - Updated with new color scheme */}
+      {/* Active Numbers Section - Added here */}
+      <div className="w-full mt-12">
+        <ActiveNumbersView />
+      </div>
+
+      {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white rounded-3xl p-6 w-full max-w-md mx-4 shadow-xl">
@@ -225,6 +220,7 @@ export default function HomeView({ setActiveTab = () => { } }: any) {
         </div>
       )}
 
+      {/* Top-up Popup */}
       {showTopUpPopup && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-[#06B6D4]/50"

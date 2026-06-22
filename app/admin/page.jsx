@@ -72,7 +72,7 @@ const [isSavingPrice, setIsSavingPrice] = useState(false); // ← ADD THIS LINE
         
         if (data.success) {
           setGlobalPrice(String(data.price));
-          setTempPrice(String(data.price));
+          setTempPrice(String(data.price));  
         }
       } catch (err) {
         console.error("Failed fetching database price configuration:", err);
